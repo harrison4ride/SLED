@@ -73,11 +73,6 @@ if __name__ == "__main__":
         mature_layer = early_exit_layers[-1]
         candidate_premature_layers = early_exit_layers[:-1]
 
-
-
-
-
-
     answers = []
     result_dict = {'question': [], 'model_scores': [], 'total_mc1': 0.0, 'total_mc2': 0.0, 'total_mc3': 0.0}
 

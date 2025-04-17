@@ -2844,8 +2844,6 @@ class GenerationMixin:
         else:
             return input_ids
 
-
-
     def sled_greedy_decode(
             self,
             input_ids: torch.LongTensor,
@@ -3031,8 +3029,6 @@ class GenerationMixin:
 
             # prepare model inputs
             model_inputs = self.prepare_inputs_for_generation(input_ids, **model_kwargs)
-
-
 
             # forward pass to get next token
             dict_outputs, outputs = self(
@@ -3420,7 +3416,7 @@ class GenerationMixin:
                 if pad_token_id is None:
                     raise ValueError("If `eos_token_id` is defined, make sure that `pad_token_id` is defined.")
                 next_tokens = next_tokens * unfinished_sequences + pad_token_id * (1 - unfinished_sequences)
-
+            
             # update generated ids, model inputs, and length for next step
             input_ids = torch.cat([input_ids, next_tokens[:, None]], dim=-1)
 

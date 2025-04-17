@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--model-name", type=str, default="meta-llama/Llama-2-7b-hf")
     parser.add_argument("--num-gpus", type=str, default="1")
     parser.add_argument("--max_gpu_memory", type=int, default=80)
-    parser.add_argument("--device", type=str, choices=["cuda", "cpu"], default="cuda")
+    parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--data-path", type=str, default="Data/StrategyQA")
     parser.add_argument("--output-path", type=str, default="./strqa_result")
     parser.add_argument("--early-exit-layers", type=str, default=None)
