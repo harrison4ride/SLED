@@ -1,8 +1,8 @@
 # Ref: https://github.com/voidism/DoLa
 import torch
 import torch.nn.functional as F
-from transformers import AutoTokenizer, AutoModelForCausalLM, LlamaTokenizer
-from transformers.generation.stopping_criteria import StoppingCriteriaList, LLamaQaStoppingCriteria
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers.generation.stopping_criteria import StoppingCriteriaList#, LLamaQaStoppingCriteria
 import numpy as np
 
 
@@ -489,16 +489,25 @@ class SLED_DecodedLLM_GSM8K:
                     })
         elif self.device == "cpu":
             kwargs = {}
+        # else:
+        #     raise ValueError(f"Invalid device: {self.device}")
+
+        if model_name =='deepseek-ai/DeepSeek-V2-Lite-Chat' or model_name =='mistralai/Codestral-22B-v0.1' or model_name =='huggyllama/llama-13b' or model_name =='google/gemma-2-27b-it':
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name,low_cpu_mem_usage=True,trust_remote_code=True,torch_dtype=torch.float16)
+        elif model_name !='huggyllama/llama-7b':
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name,low_cpu_mem_usage=True,trust_remote_code=True)
         else:
-            raise ValueError(f"Invalid device: {self.device}")
+            tokenizer = AutoTokenizer.from_pretrained(model_name if not 'vicuna' in model_name else 'huggyllama/llama-7b')
+            model = AutoModelForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, **kwargs)
 
-        tokenizer = AutoTokenizer.from_pretrained(model_name if not 'vicuna' in model_name else 'huggyllama/llama-7b')
-
-        model = AutoModelForCausalLM.from_pretrained(model_name,
-                                                     low_cpu_mem_usage=True, **kwargs)
-
-        if self.device == "cuda" and self.num_gpus == 1:
-            model.cuda()
+        if 'cuda' in self.device and int(self.num_gpus) == 1:
+            # model.cuda()
+            model.to(torch.device(self.device))
+            print('loading model to',self.device)
+        # if self.device == "cuda" and self.num_gpus == 1:
+        #     model.cuda()
 
         return model, tokenizer
 
@@ -510,7 +519,7 @@ class SLED_DecodedLLM_GSM8K:
             stop_word_ids = self.tokenizer.encode('\n' + stop_word)[3:]
             list_stop_word_ids.append(stop_word_ids)
             print("Added stop word: ", stop_word, 'with the ids', stop_word_ids, flush=True)
-        self.stopping_criteria.append(LLamaQaStoppingCriteria(list_stop_word_ids))
+        # self.stopping_criteria.append(LLamaQaStoppingCriteria(list_stop_word_ids))
 
     def generate(self, input_text, max_new_tokens=256, top_p=0.95, top_k=0, temperature=0.8, mature_layer=None,
                  premature_layer=None, candidate_premature_layers=[], mode='VanillaGreedy', verbose=True,
@@ -547,12 +556,12 @@ class SLED_DecodedLLM_GSM8K:
                                               output_scores=True, return_dict_in_generate=True,
                                               top_p=top_p, top_k=top_k, temperature=temperature,
                                               stopping_criteria=self.stopping_criteria, relative_top=relative_top,
-                                              mature_layer=mature_layer, premature_layer=None,
+                                              mature_layer=mature_layer, 
                                               candidate_premature_layers=candidate_premature_layers,
                                               relative_top_value=relative_top_value, sled_decoding=True,
                                               evolution_rate=evolution_rate, evolution_scale=evolution_scale,
                                               evolution_lower_bound=evolution_lower_bound, **kwargs, )
-                premature_layer_dist = outputs.premature_layer_dist
+                premature_layer_dist = None
 
             sequences, scores = outputs.sequences, outputs.scores
             gen_sequences = sequences[:, input_ids.shape[-1]:][0, :]
@@ -616,16 +625,25 @@ class SLED_DecodedLLM_StrQA:
                     })
         elif self.device == "cpu":
             kwargs = {}
+        # else:
+        #     raise ValueError(f"Invalid device: {self.device}")
+
+        if model_name =='deepseek-ai/DeepSeek-V2-Lite-Chat' or model_name =='mistralai/Codestral-22B-v0.1' or model_name =='huggyllama/llama-13b' or model_name =='google/gemma-2-27b-it':
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name,low_cpu_mem_usage=True,trust_remote_code=True,torch_dtype=torch.float16)
+        elif model_name !='huggyllama/llama-7b':
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForCausalLM.from_pretrained(model_name,low_cpu_mem_usage=True,trust_remote_code=True)
         else:
-            raise ValueError(f"Invalid device: {self.device}")
+            tokenizer = AutoTokenizer.from_pretrained(model_name if not 'vicuna' in model_name else 'huggyllama/llama-7b')
+            model = AutoModelForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, **kwargs)
 
-        tokenizer = AutoTokenizer.from_pretrained(model_name if not 'vicuna' in model_name else 'huggyllama/llama-7b')
-
-        model = AutoModelForCausalLM.from_pretrained(model_name,
-                                                     low_cpu_mem_usage=True, **kwargs)
-
-        if self.device == "cuda" and self.num_gpus == 1:
-            model.cuda()
+        if 'cuda' in self.device and int(self.num_gpus) == 1:
+            # model.cuda()
+            model.to(torch.device(self.device))
+            print('loading model to',self.device)
+        # if self.device == "cuda" and self.num_gpus == 1:
+        #     model.cuda()
 
         return model, tokenizer
 
@@ -644,7 +662,7 @@ class SLED_DecodedLLM_StrQA:
                 stop_word_ids = self.tokenizer.encode('\n' + stop_word)[3:]
             list_stop_word_ids.append(stop_word_ids)
             print("Added stop word: ", stop_word, 'with the ids', stop_word_ids, flush=True)
-        self.stopping_criteria.append(LLamaQaStoppingCriteria(list_stop_word_ids))
+        # self.stopping_criteria.append(LLamaQaStoppingCriteria(list_stop_word_ids))
 
     def generate(self, input_text, max_new_tokens=256, top_p=0.95, top_k=0, temperature=0.8, mature_layer=None,
                  premature_layer=None, candidate_premature_layers=[], mode='VanillaGreedy', verbose=True,
@@ -680,12 +698,12 @@ class SLED_DecodedLLM_StrQA:
                                               output_scores=True, return_dict_in_generate=True,
                                               top_p=top_p, top_k=top_k, temperature=temperature,
                                               stopping_criteria=self.stopping_criteria, relative_top=relative_top,
-                                              mature_layer=mature_layer, premature_layer=None,
+                                              mature_layer=mature_layer, 
                                               candidate_premature_layers=candidate_premature_layers,
                                               relative_top_value=relative_top_value, sled_decoding=True,
                                               evolution_rate=evolution_rate, evolution_scale=evolution_scale,
                                               evolution_lower_bound=evolution_lower_bound, **kwargs, )
-                premature_layer_dist = outputs.premature_layer_dist
+                premature_layer_dist = None #outputs.premature_layer_dist
 
             sequences, scores = outputs.sequences, outputs.scores
 
