@@ -44,6 +44,10 @@ We introduce <strong>S</strong>elf <strong>L</strong>ogits <strong>E</strong>vol
   ```bash
   pip install -e transformers
   ```
+- **Transformers-4.46.3**: Alternatively install newer version of `transformers` library from the local directory included in the project folder.
+  ```bash
+  pip install -e transformers-4.46.3
+  ```
 - **Other Dependencies**: 
   ```bash
   pip install -r requirements.txt
